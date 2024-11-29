@@ -13,28 +13,32 @@ def validate_no_x(value):     # allgemeine Validierungsfunktion für "value" (wi
         return value
 
 
-class MarketSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)   # ist der pk (primary key) von unserer Datenbank (muss bei jedem Serializer vorhanden sein!)
-    name = serializers.CharField(max_length=255)      # die Validierung der Daten geschieht hier! (nicht mehr in den models!)
-    location = serializers.CharField(max_length=255, validators=[validate_no_x])    # validators ist die Validierungsfunktion
-    description = serializers.CharField()
-    net_worth = serializers.DecimalField(max_digits=10, decimal_places=2)
+class MarketSerializer(serializers.ModelSerializer):
+    # id = serializers.IntegerField(read_only=True)   # ist der pk (primary key) von unserer Datenbank (muss bei jedem Serializer vorhanden sein!)
+    # name = serializers.CharField(max_length=255)      # die Validierung der Daten geschieht hier! (nicht mehr in den models!)
+    # location = serializers.CharField(max_length=255, validators=[validate_no_x])    # validators ist die Validierungsfunktion
+    # description = serializers.CharField()
+    # net_worth = serializers.DecimalField(max_digits=10, decimal_places=2)
 
-    def create(self, validated_data):                   # wird aufgerufen wenn in der POST-Methode save() ausgeführt wird!
-        return Market.objects.create(**validated_data)
+    # def create(self, validated_data):                   # wird aufgerufen wenn in der POST-Methode save() ausgeführt wird!
+    #     return Market.objects.create(**validated_data)
 
-    def update(self, instance, validated_data):         # für die PUT-Methode (hier muss eine Instanz übergeben werden!)
-        instance.name = validated_data.get('name', instance.name)   # der zweite Wert von der .get() Methode ist der default Wert (falls nichts übergeben wird!)
-        instance.location = validated_data.get('location', instance.location)
-        instance.description = validated_data.get('description', instance.description)
-        instance.net_worth = validated_data.get('net_worth', instance.net_worth)
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):         # für die PUT-Methode (hier muss eine Instanz übergeben werden!)
+    #     instance.name = validated_data.get('name', instance.name)   # der zweite Wert von der .get() Methode ist der default Wert (falls nichts übergeben wird!)
+    #     instance.location = validated_data.get('location', instance.location)
+    #     instance.description = validated_data.get('description', instance.description)
+    #     instance.net_worth = validated_data.get('net_worth', instance.net_worth)
+    #     instance.save()
+    #     return instance
     
     # def validate_location(self, value):     # eigene Validierungsfunktion für eine bestimmte Eigenschaft: "location" (muss im Funktionsnamen nach "_" stehen!)
     #     if 'X' in value:
     #         raise serializers.ValidationError('no X in location')
     #     return value
+
+    class Meta:
+        model = Market          # referenziert auf das Model "Market"
+        fields = '__all__'      # übernimmt alle Felder von dem Model "Market"
 
 
 # für sellers:
@@ -88,17 +92,17 @@ class ProductCreateSerializer(serializers.Serializer):       # für POST-Methode
     name = serializers.CharField(max_length=255)
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=50, decimal_places=2)
-    market = serializers.PrimaryKeyRelatedField(read_only=True)
-    seller = serializers.PrimaryKeyRelatedField(read_only=True)
+    market = serializers.IntegerField()
+    seller = serializers.IntegerField()
 
     def validate_market(self, value):
-        market = Market.objects.get(id=value)
+        market = Market.objects.filter(id__exact=value)
         if market == None:
             raise serializers.ValidationError({'message': 'Market nicht vorhanden!'})
         return market
 
     def validate_seller(self, value):
-        seller = Seller.objects.get(id=value)
+        seller = Seller.objects.filter(id__exact=value)
         if seller == None:
             raise serializers.ValidationError({'message': 'Seller nicht vorhanden!'})
         return seller
