@@ -82,10 +82,10 @@ class ProductDetailSerializer(serializers.Serializer):      # für GET-Methode (
     name = serializers.CharField(max_length=255)
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=50, decimal_places=2)
-    market = MarketSerializer(read_only=True)
-    # market = serializers.StringRelatedField(read_only=True)
-    seller = SellerDetailSerializer(read_only=True)
-    # seller = serializers.StringRelatedField(read_only=True)
+    # market = MarketSerializer(read_only=True)
+    market = serializers.StringRelatedField(read_only=True)     # nur der Name des Markets wird angezeigt!
+    # seller = SellerDetailSerializer(read_only=True)
+    seller = serializers.StringRelatedField(read_only=True)     # nur der Name des Sellers wird angezeigt!
 
 
 class ProductCreateSerializer(serializers.Serializer):       # für POST-Methode (zum Erstellen von Products)
@@ -96,27 +96,23 @@ class ProductCreateSerializer(serializers.Serializer):       # für POST-Methode
     seller = serializers.IntegerField()
 
     def validate_market(self, value):
-        market = Market.objects.filter(id__exact=value)
-        if market == None:
-            raise serializers.ValidationError({'message': 'Market nicht vorhanden!'})
-        return market
+        # Prüfe, ob ein Market mit dieser ID existiert
+        if not Market.objects.filter(id=value).exists():
+            raise serializers.ValidationError('Market nicht vorhanden!')
+        return value  # Gebe die ID zurück (Integer)
 
     def validate_seller(self, value):
-        seller = Seller.objects.filter(id__exact=value)
-        if seller == None:
-            raise serializers.ValidationError({'message': 'Seller nicht vorhanden!'})
-        return seller
+        # Prüfe, ob ein Seller mit dieser ID existiert
+        if not Seller.objects.filter(id=value).exists():
+            raise serializers.ValidationError('Seller nicht vorhanden!')
+        return value  # Gebe die ID zurück (Integer)
 
     def create(self, validated_data):
         market_id = validated_data.pop('market')
         seller_id = validated_data.pop('seller')
-        product = Product.objects.create(**validated_data)
-        market = Market.objects.get(market_id)
-        # market = Market.objects.filter(id__in=market_id)
-        seller = Seller.objects.get(seller_id)
-        # seller = Seller.objects.filter(id__in=seller_id)
-        product.market.set(market),
-        product.seller.set(seller)
+        market = Market.objects.get(id=market_id)
+        seller = Seller.objects.get(id=seller_id)
+        product = Product.objects.create(market=market, seller=seller, **validated_data)
         return product
 
 # Testdaten zum Anzeigen von Products - GET:
