@@ -92,8 +92,8 @@ class ProductCreateSerializer(serializers.Serializer):       # für POST-Methode
     name = serializers.CharField(max_length=255)
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=50, decimal_places=2)
-    market = serializers.IntegerField()
-    seller = serializers.IntegerField()
+    market = serializers.CharField()
+    seller = serializers.CharField()
 
     def validate_market(self, value):
         # Prüfe, ob ein Market mit dieser ID existiert
@@ -108,6 +108,7 @@ class ProductCreateSerializer(serializers.Serializer):       # für POST-Methode
         return value  # Gebe die ID zurück (Integer)
 
     def create(self, validated_data):
+        # print('validated_data', validated_data)
         market_id = validated_data.pop('market')
         seller_id = validated_data.pop('seller')
         market = Market.objects.get(id=market_id)
