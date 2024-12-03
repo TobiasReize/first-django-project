@@ -14,7 +14,7 @@ def validate_no_x(value):     # allgemeine Validierungsfunktion für "value" (wi
 
 
 class MarketSerializer(serializers.ModelSerializer):
-    sellers = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='seller_single')     # view_name verweist auf den Namen in der urls.py
+    sellers = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='seller-detail')     # view_name verweist auf den Namen in der urls.py
     class Meta:
         model = Market          # referenziert auf das Model "Market"
         fields = '__all__'      # übernimmt alle Felder von dem Model "Market"
@@ -88,6 +88,12 @@ class SellerSerializer(serializers.ModelSerializer):
 # }
 
 
+class SellerListSerializer(SellerSerializer, serializers.HyperlinkedModelSerializer):   # für die View SellerOfMarketList (erbt vom regulären SellerSerializer)
+    class Meta:
+        model = Seller
+        fields = ['url', 'id', 'name', 'market_count', 'contact_info', 'market_ids']
+
+
 # class SellerDetailSerializer(serializers.Serializer):   # für GET-Methode (zum Anzeigen der Seller)
 #     id = serializers.IntegerField(read_only=True)
 #     name = serializers.CharField(max_length=255)
@@ -124,8 +130,8 @@ class SellerSerializer(serializers.ModelSerializer):
 
 # für products:
 class ProductSerializer(serializers.ModelSerializer):   # für single-view (GET)
-    market = MarketSerializer(read_only=True)
-    seller = SellerSerializer(read_only=True)
+    # market = MarketSerializer(read_only=True)
+    # seller = SellerSerializer(read_only=True)
     class Meta:
         model = Product
         fields = ['id', 'name', 'description', 'price', 'market', 'seller']
@@ -133,7 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):   # für single-view (GET)
 
 class ProductHyperlinkedSerializer(ProductSerializer, serializers.HyperlinkedModelSerializer):  # für gesamt-view (GET)
     market = serializers.HyperlinkedRelatedField(read_only=True, view_name='market-detail')
-    seller = serializers.HyperlinkedRelatedField(read_only=True, view_name='seller_single')
+    seller = serializers.HyperlinkedRelatedField(read_only=True, view_name='seller-detail')
     class Meta:
         model = Product
         fields = ['id', 'url', 'name', 'description', 'price', 'market', 'seller']
